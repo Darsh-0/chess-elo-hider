@@ -41,7 +41,7 @@ function App() {
     return (
         <>
             <div className="background">
-                <button className="icon" onClick={() => chrome.tabs.create({ url: 'https://example.com' })}>
+                <button className="icon" onClick={() => chrome.tabs.create({ url: 'https://github.com/Darsh-0/chess-elo-hider' })}>
                     <img style={{ width: "25px", height: "25px"}} src={githubIcon}/>
                 </button>
                 <h1 className="title">Chess Elo Hider</h1>
