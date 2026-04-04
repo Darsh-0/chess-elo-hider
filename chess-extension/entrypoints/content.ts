@@ -1,4 +1,7 @@
 let boardFlipped = false
+let originalCountryClass: string | null = null
+let originalImageSrc: string | null = null
+let originalImageSrcset: string | null = null
 
 function applySettings() {
     chrome.storage.local.get(['hideElo', 'hideOpponentElo', 'hideCountry', 'hideName', 'hideImage'], (result) => {
@@ -59,8 +62,8 @@ function startObserver() {
         if (activeSettings.hideUserElo) applyMyEloMask()
         if (activeSettings.hideOpponentElo) applyEloMask()
         if (activeSettings.hideOpponentCountry) applyCountryMask()
-        if (activeSettings.hideOpponentName) applyEloMask()
-        if (activeSettings.hideOpponentImage) applyEloMask()
+        if (activeSettings.hideOpponentName) applyNameMask()
+        if (activeSettings.hideOpponentImage) applyImageMask()
     })
     globalObserver.observe(document.body, { childList: true, subtree: true, characterData: true })
 }
@@ -160,14 +163,15 @@ function hideOpponentCountry(hide: boolean) {
 
     if (!hide) {
         const container = getOpponentElement()
-        const el = container?.querySelector<HTMLElement>('.cc-country-flag-component.cc-country-flag-small')
-        if (el?.dataset.originalCountry) {
-            const current = Array.from(el.classList).find(c => c.startsWith('country-'))
-            if (current) el.classList.remove(current)
-            el.classList.add(el.dataset.originalCountry)
-            el.innerHTML = el.dataset.originalHtml ?? ''
-            delete el.dataset.originalCountry
-            delete el.dataset.originalHtml
+        if (container) {
+            const el = container.querySelector<HTMLElement>('.cc-country-flag-component.cc-country-flag-small[data-masked]')
+            const fake = container.querySelector<HTMLElement>('[data-fake-flag]')
+            if (el) {
+                el.style.display = ''
+                delete el.dataset.masked
+            }
+            fake?.remove()
+            originalCountryClass = null
         }
         return
     }
@@ -180,25 +184,88 @@ function applyCountryMask() {
     if (!container) return
 
     const el = container.querySelector<HTMLElement>('.cc-country-flag-component.cc-country-flag-small')
-    if (!el) return
+    if (!el || el.dataset.masked) return
 
     const countryClass = Array.from(el.classList).find(c => c.startsWith('country-'))
     if (!countryClass) return
 
-    if (!el.dataset.originalCountry) {
-        el.dataset.originalCountry = countryClass
-        el.dataset.originalHtml = el.innerHTML
+    if (!originalCountryClass) {
+        originalCountryClass = countryClass
     }
 
-    el.classList.remove(countryClass)
-    el.classList.add('country-1')
-    el.innerHTML = ''
+    el.style.display = 'none'
+    el.dataset.masked = 'true'
+
+    const fake = document.createElement('div')
+    fake.className = 'cc-country-flag-component cc-country-flag-small country-1'
+    fake.dataset.fakeFlag = 'true'
+    el.insertAdjacentElement('afterend', fake)
 }
 
 function hideOpponentName(hide: boolean) {
+    activeSettings.hideOpponentName = hide
+    hide ? startObserver() : stopObserverIfUnneeded()
 
+    if (!hide) {
+        const container = getOpponentElement()
+        const el = container?.querySelector<HTMLElement>('.cc-user-username-component')
+        if (el?.dataset.originalName !== undefined) {
+            el.textContent = el.dataset.originalName
+            delete el.dataset.originalName
+        }
+        return
+    }
+
+    if (hide) applyNameMask()
+}
+
+function applyNameMask() {
+    const container = getOpponentElement()
+    if (!container) return
+
+    const el = container.querySelector<HTMLElement>('.cc-user-username-component')
+    if (!el) return
+
+    if (!el.dataset.originalName) {
+        el.dataset.originalName = el.textContent ?? ''
+    }
+
+    if (el.textContent !== 'Opponent') {
+        el.textContent = 'Opponent'
+    }
 }
 
 function hideOpponentImage(hide: boolean) {
+    activeSettings.hideOpponentImage = hide
+    hide ? startObserver() : stopObserverIfUnneeded()
 
+    if (!hide) {
+        const container = getOpponentElement()
+        const el = container?.querySelector<HTMLImageElement>('.cc-avatar-img')
+        if (el && originalImageSrc) {
+            el.src = originalImageSrc
+            el.srcset = originalImageSrcset ?? ''
+            originalImageSrc = null
+            originalImageSrcset = null
+        }
+        return
+    }
+
+    applyImageMask()
+}
+
+function applyImageMask() {
+    const container = getOpponentElement()
+    if (!container) return
+
+    const el = container.querySelector<HTMLImageElement>('.cc-avatar-img')
+    if (!el) return
+
+    if (!originalImageSrc) {
+        originalImageSrc = el.src
+        originalImageSrcset = el.srcset
+    }
+
+    el.src = 'https://www.chess.com/bundles/web/images/black_400.png'
+    el.srcset = ''
 }
