@@ -49,6 +49,7 @@ html, body {
   background-color: #437198;
   min-height: 100%;
   position: relative;
+  padding-bottom: 1em;
 }
 
 .title {
@@ -68,13 +69,13 @@ html, body {
 
 .me {
   padding: 1em;
-  color: white;
+  color: black;
 }
 
 .icon {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
+  bottom: 5px;
+  right: 5px;
   background: none;
   border: none;
   padding: 0;
@@ -87,4 +88,54 @@ html, body {
   justify-content: center;
   padding-top: 10px;
   padding-bottom: 10px;
+  background-color: #bfdbfe;
+  border-radius: 5px;
+  margin-left: 3em;
+  margin-right: 3em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.donate {
+  font-size: 12px;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.donate:hover {
+  text-decoration: underline;
+}
+
+.tooltip {
+  visibility: hidden;
+  opacity: 0;
+  background: #333;
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: opacity 0.2s;
+}
+
+.tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-wrapper:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 14px;
+  color: #ffffffaa;
+  margin-top: -2.5em;
+  padding-bottom: 0.75em;
 }
