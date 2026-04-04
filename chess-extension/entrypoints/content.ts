@@ -50,18 +50,34 @@ function waitForElement(selector: string, callback: (el: HTMLElement) => void) {
     observer.observe(document.body, { childList: true, subtree: true })
 }
 
-function hideMyElo(hide: boolean) {
+let globalObserver: MutationObserver | null = null
+let activeSettings = { hideUserElo: false, hideOpponentElo: false, hideOpponentCountry: false, hideOpponentName: false, hideOpponentImage: false}
 
+function startObserver() {
+    if (globalObserver) return
+    globalObserver = new MutationObserver(() => {
+        if (activeSettings.hideUserElo) applyMyEloMask()
+        if (activeSettings.hideOpponentElo) applyEloMask()
+        if (activeSettings.hideOpponentCountry) applyCountryMask()
+        if (activeSettings.hideOpponentName) applyEloMask()
+        if (activeSettings.hideOpponentImage) applyEloMask()
+    })
+    globalObserver.observe(document.body, { childList: true, subtree: true, characterData: true })
 }
 
-let eloObserver: MutationObserver | null = null
+function stopObserverIfUnneeded() {
+    if (!Object.values(activeSettings).some(Boolean)) {
+        globalObserver?.disconnect()
+        globalObserver = null
+    }
+}
 
-function hideOpponentElo(hide: boolean) {
-    eloObserver?.disconnect()
-    eloObserver = null
+function hideMyElo(hide: boolean) {
+    activeSettings.hideUserElo = hide
+    hide ? startObserver() : stopObserverIfUnneeded()
 
     if (!hide) {
-        const container = getEloElement()
+        const container = getUserElement()
         const el = container?.querySelector<HTMLElement>('.cc-text-medium.cc-user-rating-white')
         if (el?.dataset.originalElo !== undefined) {
             el.textContent = el.dataset.originalElo
@@ -70,13 +86,51 @@ function hideOpponentElo(hide: boolean) {
         return
     }
 
-    applyEloMask()
-
-    eloObserver = new MutationObserver(() => applyEloMask())
-    eloObserver.observe(document.body, { childList: true, subtree: true, characterData: true })
+    if (hide) applyMyEloMask()
 }
 
-function getEloElement(): HTMLElement | null {
+function applyMyEloMask() {
+    const container = getUserElement()
+    if (!container) return
+
+    const el = container.querySelector<HTMLElement>('.cc-text-medium.cc-user-rating-white')
+    if (!el) return
+
+    if (!el.dataset.originalElo) {
+        el.dataset.originalElo = el.textContent ?? ''
+    }
+
+    if (el.textContent !== ' (????) ') {
+        el.textContent = ' (????) '
+    }
+}
+
+function getUserElement(): HTMLElement | null {
+    const containerSelector = boardFlipped
+        ? '.board-layout-player.board-layout-top.player-component.player-top'
+        : '.board-layout-player.board-layout-bottom.player-component.player-bottom'
+
+    return document.querySelector(containerSelector)
+}
+
+function hideOpponentElo(hide: boolean) {
+    activeSettings.hideOpponentElo = hide
+    hide ? startObserver() : stopObserverIfUnneeded()
+
+    if (!hide) {
+        const container = getOpponentElement()
+        const el = container?.querySelector<HTMLElement>('.cc-text-medium.cc-user-rating-white')
+        if (el?.dataset.originalElo !== undefined) {
+            el.textContent = el.dataset.originalElo
+            delete el.dataset.originalElo
+        }
+        return
+    }
+
+    if (hide) applyEloMask()
+}
+
+function getOpponentElement(): HTMLElement | null {
     const containerSelector = boardFlipped
         ? '.board-layout-player.board-layout-bottom.player-component.player-bottom'
         : '.board-layout-player.board-layout-top.player-component.player-top'
@@ -85,7 +139,7 @@ function getEloElement(): HTMLElement | null {
 }
 
 function applyEloMask() {
-    const container = getEloElement()
+    const container = getOpponentElement()
     if (!container) return
 
     const el = container.querySelector<HTMLElement>('.cc-text-medium.cc-user-rating-white')
@@ -101,7 +155,44 @@ function applyEloMask() {
 }
 
 function hideOpponentCountry(hide: boolean) {
+    activeSettings.hideOpponentCountry = hide
+    hide ? startObserver() : stopObserverIfUnneeded()
 
+    if (!hide) {
+        const container = getOpponentElement()
+        const el = container?.querySelector<HTMLElement>('.cc-country-flag-component.cc-country-flag-small')
+        if (el?.dataset.originalCountry) {
+            const current = Array.from(el.classList).find(c => c.startsWith('country-'))
+            if (current) el.classList.remove(current)
+            el.classList.add(el.dataset.originalCountry)
+            el.innerHTML = el.dataset.originalHtml ?? ''
+            delete el.dataset.originalCountry
+            delete el.dataset.originalHtml
+        }
+        return
+    }
+
+    applyCountryMask()
+}
+
+function applyCountryMask() {
+    const container = getOpponentElement()
+    if (!container) return
+
+    const el = container.querySelector<HTMLElement>('.cc-country-flag-component.cc-country-flag-small')
+    if (!el) return
+
+    const countryClass = Array.from(el.classList).find(c => c.startsWith('country-'))
+    if (!countryClass) return
+
+    if (!el.dataset.originalCountry) {
+        el.dataset.originalCountry = countryClass
+        el.dataset.originalHtml = el.innerHTML
+    }
+
+    el.classList.remove(countryClass)
+    el.classList.add('country-1')
+    el.innerHTML = ''
 }
 
 function hideOpponentName(hide: boolean) {
