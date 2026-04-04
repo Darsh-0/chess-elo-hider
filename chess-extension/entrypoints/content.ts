@@ -4,12 +4,13 @@ let originalImageSrc: string | null = null
 let originalImageSrcset: string | null = null
 
 function applySettings() {
-    chrome.storage.local.get(['hideElo', 'hideOpponentElo', 'hideCountry', 'hideName', 'hideImage'], (result) => {
+    chrome.storage.local.get(['hideElo', 'hideOpponentElo', 'hideCountry', 'hideName', 'hideImage', 'hideScore'], (result) => {
         if (result.hideElo) { hideMyElo(true) }
         if (result.hideOpponentElo) { hideOpponentElo(true) }
         if (result.hideCountry) { hideOpponentCountry(true) }
         if (result.hideName) { hideOpponentName(true) }
         if (result.hideImage) { hideOpponentImage(true) }
+        if (result.hideScore) { hideScore(true) }
     })
 }
 
@@ -25,6 +26,7 @@ export default defineContentScript({
             if (changes.hideCountry) { hideOpponentCountry(changes.hideCountry.newValue as boolean) }
             if (changes.hideName) { hideOpponentName(changes.hideName.newValue as boolean) }
             if (changes.hideImage) { hideOpponentImage(changes.hideImage.newValue as boolean) }
+            if (changes.hideScore) { hideScore(changes.hideScore.newValue as boolean) }
         })
 
         waitForElement('#board-controls-images-palette', () => {
@@ -54,7 +56,7 @@ function waitForElement(selector: string, callback: (el: HTMLElement) => void) {
 }
 
 let globalObserver: MutationObserver | null = null
-let activeSettings = { hideUserElo: false, hideOpponentElo: false, hideOpponentCountry: false, hideOpponentName: false, hideOpponentImage: false}
+let activeSettings = { hideUserElo: false, hideOpponentElo: false, hideOpponentCountry: false, hideOpponentName: false, hideOpponentImage: false, hideScore: false}
 
 function startObserver() {
     if (globalObserver) return
@@ -64,6 +66,7 @@ function startObserver() {
         if (activeSettings.hideOpponentCountry) applyCountryMask()
         if (activeSettings.hideOpponentName) applyNameMask()
         if (activeSettings.hideOpponentImage) applyImageMask()
+        if (activeSettings.hideScore) applyScoreMask()
     })
     globalObserver.observe(document.body, { childList: true, subtree: true, characterData: true })
 }
@@ -251,7 +254,7 @@ function hideOpponentImage(hide: boolean) {
         return
     }
 
-    applyImageMask()
+    if (hide) applyImageMask()
 }
 
 function applyImageMask() {
@@ -269,3 +272,24 @@ function applyImageMask() {
     el.src = 'https://www.chess.com/bundles/web/images/black_400.png'
     el.srcset = ''
 }
+
+function hideScore(hide: boolean) {
+    activeSettings.hideScore = hide
+    hide ? startObserver() : stopObserverIfUnneeded()
+
+    if (!hide) {
+        document.querySelectorAll<HTMLElement>('.grudge-score-component').forEach(el => {
+            el.style.display = ''
+        })
+        return
+    }
+
+    applyScoreMask()
+}
+
+function applyScoreMask() {
+    document.querySelectorAll<HTMLElement>('.grudge-score-component').forEach(el => {
+        el.style.display = 'none'
+    })
+}
+

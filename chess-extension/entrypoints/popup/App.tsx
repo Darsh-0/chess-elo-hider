@@ -9,6 +9,7 @@ const DEFAULTS = {
     hideCountry: false,
     hideName: false,
     hideImage: false,
+    hideScore: false,
 }
 
 type Settings = typeof DEFAULTS
@@ -34,9 +35,8 @@ function App() {
         { key: 'hideCountry',     label: 'Hide Country' },
         { key: 'hideName',     label: 'Hide Name' },
         { key: 'hideImage',     label: 'Hide Profile Image' },
+        { key: 'hideScore',     label: 'Hide Score' },
     ]
-
-
 
     return (
         <>
@@ -60,7 +60,12 @@ function App() {
                         ))}
                     </div>
                 </div>
-                    <p className="me">Made by Darsh, Support me??</p>
+                <div className="footer">
+                    <p className="me">Made by Darsh</p>
+                    <button style={{background: "#4F83EC"}} onClick={() => chrome.tabs.create({ url: 'https://ko-fi.com/darshgandhi' })}>☕ Support me</button>
+                </div>
+
+
             </div>
         </>
     )
