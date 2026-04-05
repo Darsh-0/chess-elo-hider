@@ -5,7 +5,7 @@ export default defineConfig({
   manifest: {
     name: 'Chess Elo Hider',
     description: 'Hides information that may be putting you off while playing on chess.com',
-    permissions: ['storage', 'scripting', 'tabs'],
+    permissions: ['storage', 'tabs'],
     version: '1.0.0',
   },
 });

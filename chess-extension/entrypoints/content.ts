@@ -70,6 +70,7 @@ function startObserver() {
         if (activeSettings.hideOpponentImage) applyImageMask()
         if (activeSettings.hideScore) applyScoreMask()
         if (activeSettings.hideChatInfo) applyChatInfoMask()
+        if (activeSettings.hideUserElo || activeSettings.hideOpponentElo) applyRatingChangeMask()
     })
     globalObserver.observe(document.body, { childList: true, subtree: true, characterData: true })
 }
@@ -92,6 +93,7 @@ function hideMyElo(hide: boolean) {
             el.textContent = el.dataset.originalElo
             delete el.dataset.originalElo
         }
+        if (!activeSettings.hideOpponentElo) restoreRatingChange()
         return
     }
 
@@ -99,6 +101,7 @@ function hideMyElo(hide: boolean) {
 }
 
 function applyMyEloMask() {
+    applyRatingChangeMask()
     const container = getUserElement()
     if (!container) return
 
@@ -112,6 +115,8 @@ function applyMyEloMask() {
     if (el.textContent !== ' (????) ') {
         el.textContent = ' (????) '
     }
+
+
 }
 
 function getUserElement(): HTMLElement | null {
@@ -133,6 +138,7 @@ function hideOpponentElo(hide: boolean) {
             el.textContent = el.dataset.originalElo
             delete el.dataset.originalElo
         }
+        if (!activeSettings.hideUserElo) restoreRatingChange()
         return
     }
 
@@ -148,6 +154,7 @@ function getOpponentElement(): HTMLElement | null {
 }
 
 function applyEloMask() {
+    applyRatingChangeMask()
     const container = getOpponentElement()
     if (!container) return
 
@@ -373,3 +380,14 @@ function applyChatInfoMask() {
     })
 }
 
+function applyRatingChangeMask() {
+    if (document.getElementById('rating-change-hide-style')) return
+    const style = document.createElement('style')
+    style.id = 'rating-change-hide-style'
+    style.textContent = '.rating-score-change { visibility: hidden !important; }'
+    document.head.appendChild(style)
+}
+
+function restoreRatingChange() {
+    document.getElementById('rating-change-hide-style')?.remove()
+}
