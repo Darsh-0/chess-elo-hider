@@ -10,6 +10,7 @@ const DEFAULTS = {
     hideName: false,
     hideImage: false,
     hideScore: false,
+    hideChatInfo: false,
 }
 
 type Settings = typeof DEFAULTS
@@ -36,6 +37,7 @@ function App() {
         { key: 'hideName',        label: 'Hide Name',          tooltip: 'Hides your opponent\'s username' },
         { key: 'hideImage',       label: 'Hide Profile Image', tooltip: 'Hides your opponent\'s profile picture' },
         { key: 'hideScore',       label: 'Hide Score',         tooltip: 'Hides the score tracker for people you\'ve already vs' },
+        { key: 'hideChatInfo',       label: 'Hide Chat Info',         tooltip: 'Hides information about opponent in chat' },
     ]
 
     return (

@@ -6,5 +6,6 @@ export default defineConfig({
     name: 'Chess Elo Hider',
     description: 'Hides information that may be putting you off while playing on chess.com',
     permissions: ['storage', 'scripting', 'tabs'],
+    version: '1.0.0',
   },
 });

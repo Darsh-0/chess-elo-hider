@@ -4,13 +4,14 @@ let originalImageSrc: string | null = null
 let originalImageSrcset: string | null = null
 
 function applySettings() {
-    chrome.storage.local.get(['hideElo', 'hideOpponentElo', 'hideCountry', 'hideName', 'hideImage', 'hideScore'], (result) => {
+    chrome.storage.local.get(['hideElo', 'hideOpponentElo', 'hideCountry', 'hideName', 'hideImage', 'hideScore', 'hideChatInfo'], (result) => {
         if (result.hideElo) { hideMyElo(true) }
         if (result.hideOpponentElo) { hideOpponentElo(true) }
         if (result.hideCountry) { hideOpponentCountry(true) }
         if (result.hideName) { hideOpponentName(true) }
         if (result.hideImage) { hideOpponentImage(true) }
         if (result.hideScore) { hideScore(true) }
+        if (result.hideChatInfo) { hideChatInfo(true) }
     })
 }
 
@@ -27,6 +28,7 @@ export default defineContentScript({
             if (changes.hideName) { hideOpponentName(changes.hideName.newValue as boolean) }
             if (changes.hideImage) { hideOpponentImage(changes.hideImage.newValue as boolean) }
             if (changes.hideScore) { hideScore(changes.hideScore.newValue as boolean) }
+            if (changes.hideChatInfo) { hideChatInfo(changes.hideChatInfo.newValue as boolean) }
         })
 
         waitForElement('#board-controls-images-palette', () => {
@@ -56,7 +58,7 @@ function waitForElement(selector: string, callback: (el: HTMLElement) => void) {
 }
 
 let globalObserver: MutationObserver | null = null
-let activeSettings = { hideUserElo: false, hideOpponentElo: false, hideOpponentCountry: false, hideOpponentName: false, hideOpponentImage: false, hideScore: false}
+let activeSettings = { hideUserElo: false, hideOpponentElo: false, hideOpponentCountry: false, hideOpponentName: false, hideOpponentImage: false, hideScore: false, hideChatInfo: false }
 
 function startObserver() {
     if (globalObserver) return
@@ -67,6 +69,7 @@ function startObserver() {
         if (activeSettings.hideOpponentName) applyNameMask()
         if (activeSettings.hideOpponentImage) applyImageMask()
         if (activeSettings.hideScore) applyScoreMask()
+        if (activeSettings.hideChatInfo) applyChatInfoMask()
     })
     globalObserver.observe(document.body, { childList: true, subtree: true, characterData: true })
 }
@@ -216,6 +219,22 @@ function hideOpponentName(hide: boolean) {
             el.textContent = el.dataset.originalName
             delete el.dataset.originalName
         }
+
+        document.querySelectorAll<HTMLElement>('.user-tagline-chat-member').forEach(chatEl => {
+            if (chatEl.dataset.originalName !== undefined) {
+                chatEl.textContent = chatEl.dataset.originalName
+                delete chatEl.dataset.originalName
+            }
+        })
+
+        document.querySelectorAll<HTMLElement>('.game-rate-sport-message-component').forEach(el => {
+            const link = el.querySelector<HTMLAnchorElement>('a.user-username')
+            if (link?.dataset.originalName !== undefined) {
+                link.textContent = link.dataset.originalName
+                delete link.dataset.originalName
+            }
+        })
+
         return
     }
 
@@ -236,6 +255,26 @@ function applyNameMask() {
     if (el.textContent !== 'Opponent') {
         el.textContent = 'Opponent'
     }
+
+    document.querySelectorAll<HTMLElement>('.user-tagline-chat-member').forEach(chatEl => {
+        if (!chatEl.dataset.originalName) {
+            chatEl.dataset.originalName = chatEl.textContent ?? ''
+        }
+        if (chatEl.textContent !== 'Opponent:') {
+            chatEl.textContent = 'Opponent:'
+        }
+    })
+
+    document.querySelectorAll<HTMLElement>('.game-rate-sport-message-component').forEach(el => {
+        const link = el.querySelector<HTMLAnchorElement>('a.user-username')
+        if (!link) return
+        if (!link.dataset.originalName) {
+            link.dataset.originalName = link.textContent ?? ''
+        }
+        if (link.textContent !== 'your Opponent') {
+            link.textContent = 'your Opponent'
+        }
+    })
 }
 
 function hideOpponentImage(hide: boolean) {
@@ -284,12 +323,53 @@ function hideScore(hide: boolean) {
         return
     }
 
-    applyScoreMask()
+    if (hide) applyScoreMask()
 }
 
 function applyScoreMask() {
     document.querySelectorAll<HTMLElement>('.grudge-score-component').forEach(el => {
         el.style.display = 'none'
+    })
+}
+
+function hideChatInfo(hide: boolean) {
+    activeSettings.hideChatInfo = hide
+    hide ? startObserver() : stopObserverIfUnneeded()
+
+    if (!hide) {
+        const container = document.querySelector('.chat-room-chat')
+        container?.querySelectorAll<HTMLElement>('.game-start-message-component').forEach(el => {
+            if (el.dataset.originalText !== undefined) {
+                el.textContent = el.dataset.originalText
+                delete el.dataset.originalText
+            }
+        })
+        return
+    }
+
+    if (hide) applyChatInfoMask()
+}
+
+function applyChatInfoMask() {
+    const container = document.querySelector('.chat-room-chat')
+    if (!container) return
+
+    container.querySelectorAll<HTMLElement>('.game-start-message-component').forEach(el => {
+        if (!el.dataset.originalText) {
+            el.dataset.originalText = el.textContent ?? ''
+        }
+        if (el.textContent !== 'Game started') {
+            el.textContent = 'Game started'
+        }
+    })
+
+    container.querySelectorAll<HTMLElement>('.game-over-message-component').forEach(el => {
+        if (!el.dataset.originalText) {
+            el.dataset.originalText = el.textContent ?? ''
+        }
+        if (el.textContent !== 'Game over') {
+            el.textContent = 'Game over'
+        }
     })
 }
 
