@@ -17,11 +17,12 @@ All settings persist between sessions and toggle instantly — no refresh needed
 
 Install manually:
 1. Clone the repo
-2. Run `npm install`
-3. Run `npm run build`
-4. Go to `chrome://extensions`
-5. Enable **Developer mode**
-6. Click **Load unpacked** and select the `.output/chrome-mv3` folder
+2. Run `cd chess-extension`
+3. Run `npm install`
+4. Run `npm run build`
+5. Go to `chrome://extensions`
+6. Enable **Developer mode**
+7. Click **Load unpacked** and select the `.output/chrome-mv3` folder
 
 ## Development
 ```bash
