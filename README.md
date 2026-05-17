@@ -1,5 +1,8 @@
 # Chess Elo Hider
 
+## Chrome Store Link
+https://chromewebstore.google.com/detail/chess-elo-hider/mcghebmakkebhjpgdkbhfhahpmikonbm?authuser=0&hl=en
+
 A Chrome extension that hides opponent information on chess.com so you can focus purely on the game.
 
 ## Features
